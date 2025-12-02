@@ -2,7 +2,6 @@
 #
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 #
-.utmp/
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -80,8 +79,8 @@ crashlytics-build.properties
 InitTestScene*.unity*
 
 # Addressables default ignores, before user customizations
-/ServerData
-/[Aa]ssets/StreamingAssets/aa*
+/[Ss]erverData/
+/[Aa]ssets/[Ss]treaming[Aa]ssets/aa*
 /[Aa]ssets/AddressableAssetsData/link.xml*
 /[Aa]ssets/Addressables_Temp*
 # By default, Addressables content builds will generate addressables_content_state.bin
@@ -98,7 +97,25 @@ InitTestScene*.unity*
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 
-# API Keys - CRITICAL
+# ==============================================
+# API KEYS AND SENSITIVE DATA - CRITICAL!
+# ==============================================
+# Google Gemini API keys
 **/apikey.txt
-**/Config/apikey.txt
-Assets/Resources/Config/
+**/apikey.json
+**/*apikey*
+**/Config/apikey*
+[Aa]ssets/[Rr]esources/[Cc]onfig/apikey*
+[Aa]ssets/[Rr]esources/[Cc]onfig/*.txt
+
+# Any config files with credentials
+**/credentials.json
+**/*secret*
+**/*password*
+.env
+.env.*
+
+# Backup files (can contain sensitive data)
+*.backup
+*.bak
+*~
