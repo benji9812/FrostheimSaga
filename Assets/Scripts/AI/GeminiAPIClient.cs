@@ -6,6 +6,7 @@ using UnityEngine;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using FrostheimSaga.World;
+using FrostheimSaga.Characters;
 using System.Collections.Generic;
 
 namespace FrostheimSaga.AI
@@ -22,7 +23,7 @@ namespace FrostheimSaga.AI
         {
             LoadApiKey();
         }
-        
+
         /// Läser API-nyckeln från Resources/Config/apikey.txt
         private void LoadApiKey()
         {
@@ -206,6 +207,89 @@ namespace FrostheimSaga.AI
             else
             {
                 Debug.LogError("[AI TEST] Inget svar från Gemini.");
+            }
+        }
+        
+        /// Generates a character using AI with stats, background, and traits.
+        /// Level 1, age around 20-30 as requested.
+        public async Task<Character> GenerateCharacterAsync(string race, string characterClass)
+        {
+            string prompt =
+                $"Du är en spel-designer. Skapa en karaktär i världen Frostheim Saga (nordisk fantasy). " +
+                $"Ras: {race}, Klass: {characterClass}. " +
+                $"Karaktären ska vara Level 1 och ha en ålder mellan 20-30 år. " +
+                "Svara ENDAST som strikt JSON i följande format, utan extra text:\n\n" +
+                "{\n" +
+                "  \"character\": {\n" +
+                "    \"Name\": \"...\",\n" +
+                "    \"Age\": 25,\n" +
+                "    \"Race\": \"...\",\n" +
+                "    \"CharacterClass\": \"...\",\n" +
+                "    \"Level\": 1,\n" +
+                "    \"Attributes\": {\n" +
+                "      \"Strength\": 12,\n" +
+                "      \"Dexterity\": 14,\n" +
+                "      \"Constitution\": 13,\n" +
+                "      \"Intelligence\": 10,\n" +
+                "      \"Wisdom\": 11,\n" +
+                "      \"Charisma\": 15\n" +
+                "    },\n" +
+                "    \"Background\": \"En kort bakgrundshistoria...\",\n" +
+                "    \"Traits\": [\"Modig\", \"Nyfiken\"],\n" +
+                "    \"Skills\": [\"Svärdsstrid\", \"Överlevnad\"],\n" +
+                "    \"Equipment\": [\"Järnsvärd\", \"Läderrustning\", \"Proviantpåse\"]\n" +
+                "  }\n" +
+                "}";
+
+            string jsonText = await GenerateText(prompt);
+
+            if (string.IsNullOrEmpty(jsonText))
+            {
+                Debug.LogError("[AI CHARACTER] Tomt svar från Gemini.");
+                return null;
+            }
+
+            try
+            {
+                // Remove code fences if present
+                jsonText = jsonText.Trim();
+                if (jsonText.StartsWith("```"))
+                {
+                    int firstNewLine = jsonText.IndexOf('\n');
+                    if (firstNewLine >= 0)
+                    {
+                        jsonText = jsonText.Substring(firstNewLine + 1);
+                    }
+
+                    int lastFence = jsonText.LastIndexOf("```", System.StringComparison.Ordinal);
+                    if (lastFence >= 0)
+                    {
+                        jsonText = jsonText.Substring(0, lastFence);
+                    }
+
+                    jsonText = jsonText.Trim();
+                }
+
+                CharacterResponse response = JsonConvert.DeserializeObject<CharacterResponse>(jsonText);
+                if (response?.character == null)
+                {
+                    Debug.LogError("[AI CHARACTER] Kunde inte parsa karaktär från JSON.");
+                    return null;
+                }
+
+                // Ensure defaults
+                response.character.Race ??= race;
+                response.character.CharacterClass ??= characterClass;
+                if (response.character.Level <= 0) response.character.Level = 1;
+                if (response.character.Age < 18 || response.character.Age > 35) response.character.Age = 25;
+
+                Debug.Log($"[AI CHARACTER] Genererad karaktär: {response.character.Name} (Level {response.character.Level} {response.character.Race} {response.character.CharacterClass})");
+                return response.character;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[AI CHARACTER] JSON-fel: {e.Message}\nRått svar:\n{jsonText}");
+                return null;
             }
         }
     }

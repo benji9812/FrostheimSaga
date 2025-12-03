@@ -1,7 +1,8 @@
-﻿using System.Text;
+﻿using FrostheimSaga.World;
+using System.Text;
 using TMPro;
 using UnityEngine;
-using FrostheimSaga.World;
+using UnityEngine.UI;
 
 namespace FrostheimSaga.UI
 {
@@ -61,6 +62,16 @@ namespace FrostheimSaga.UI
             }
 
             questText.text = sb.ToString();
+
+            // Force TMP to recalculate
+            questText.ForceMeshUpdate();
+
+            // Set Content height to text height
+            RectTransform contentRect = questText.transform.parent.GetComponent<RectTransform>();
+            if (contentRect != null)
+            {
+                contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, questText.preferredHeight + 20);
+            }
         }
     }
 }
